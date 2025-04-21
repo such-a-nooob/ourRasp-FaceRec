@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="static/style.css" />
+    <title>Live Tracking Record</title>
+</head>
+
+<body>
+    <div class="title"><img src="static/icon.png" class="icon" alt="website logo" />Live Tracking Record</div>
+    <div class="navbar">
+        <div>
+            <a href="/" class="active">Home</a> <!-- Default active tab -->
+            <a href="/about">About</a>
+        </div>
+        <div class="username">{{ username }} <a href="/logout" class="logout-icon">&#x21AA;</a></div>
+    </div>
+
+    <div class="container">
+        <form action="/found" method="POST">
+            <div class="sidebar">
+                <input type="date" id="selected_date" name="selected_date" required value="{{ selected_date }}" />
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+        <div class="content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Detected face</th>
+                        <th>Name</th>
+                        <th>Time</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if found_data %} {% for name, time, image_path in found_data %}
+                    <tr>
+                        <td>
+                            <img src="{{ image_path }}" alt="Face" style="width: 100px; height: auto;">
+                        </td>
+                        <td>{{ name }}</td>
+                        <td>{{ time }}</td>
+                        <td>Camera 1</td>
+                    </tr>
+                    {% endfor %} {% else %}
+                    <tr>
+                        <td colspan="4">No data available</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript to handle active tab state
+        const navLinks = document.querySelectorAll('.navbar a');
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function () {
+                // Remove 'active' class from all links
+                navLinks.forEach(link => link.classList.remove('active'));
+                // Add 'active' class to the clicked link
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>
