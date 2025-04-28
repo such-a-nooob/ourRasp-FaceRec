@@ -4,6 +4,8 @@ import sqlite3
 from datetime import datetime
 import os
 import config
+from face_recognition import main as facerec
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -94,6 +96,8 @@ def register():
 # Found route (requires login)
 @app.route('/found', methods=['POST'])
 def found():
+    facerec()
+    
     if 'username' not in session:
         return redirect(url_for('login'))
 
