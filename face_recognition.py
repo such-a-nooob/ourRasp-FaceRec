@@ -49,8 +49,8 @@ class FaceRecognizer:
         self.reclassify_interval = 10
         self.reclassify_interval_cnt = 0
 
-        self.detected_faces_dir = config.DETECTED_FACES_DIR
-        os.makedirs(self.detected_faces_dir, exist_ok=True)
+        self.recognized_faces_dir = config.RECOGNIZED_FACES_DIR
+        os.makedirs(self.recognized_faces_dir, exist_ok=True)
         self.last_saved_time = {}
 
     def get_face_database(self):
@@ -73,18 +73,39 @@ class FaceRecognizer:
         return np.linalg.norm(np.array(feature_1) - np.array(feature_2))
 
     def found(self, name, img_rd, face_position, source_img_path):
-        current_time = datetime.datetime.now()
-        current_time_str = current_time.strftime("%H:%M:%S")
-        current_date = current_time.strftime("%Y-%m-%d")
+        try:
+            # Extract date and time from the source image filename
+            basename = os.path.basename(source_img_path)  # e.g., face_20250428_155157.jpg
+            parts = basename.split('_')
+            if len(parts) < 3:
+                raise ValueError(f"Invalid filename format: {basename}")
 
+            date_raw = parts[1]  # '20250428'
+            time_raw = parts[2].split('.')[0]  # '155157'
+
+            # Format extracted date and time
+            current_date = f"{date_raw[:4]}-{date_raw[4:6]}-{date_raw[6:]}"  # '2025-04-28'
+            current_time_str = f"{time_raw[:2]}:{time_raw[2:4]}:{time_raw[4:]}"  # '15:51:57'
+
+            # Create a datetime object from extracted date and time
+            extracted_datetime = datetime.datetime(
+                int(date_raw[:4]), int(date_raw[4:6]), int(date_raw[6:]),
+                int(time_raw[:2]), int(time_raw[2:4]), int(time_raw[4:])
+            )
+
+        except Exception as e:
+            logging.error(f"Error extracting date and time from filename: {e}")
+            return
+
+        # Check last saved time to avoid duplicate saves
         if name in self.last_saved_time:
-            time_diff = (current_time - self.last_saved_time[name]).total_seconds() / 60
+            time_diff = (extracted_datetime - self.last_saved_time[name]).total_seconds() / 60
             if time_diff < 5:
                 logging.info(f"{name} already saved within the last 5 minutes. Skipping.")
                 return
 
-        # Save cropped face to detected_faces_dir
-        date_folder = os.path.join(self.detected_faces_dir, current_date)
+        # Save cropped face to recognized_faces_dir
+        date_folder = os.path.join(self.recognized_faces_dir, current_date)
         os.makedirs(date_folder, exist_ok=True)
 
         face_image_filename = f"{name}_{current_time_str.replace(':', '-')}.jpg"
@@ -103,23 +124,26 @@ class FaceRecognizer:
         conn.commit()
         conn.close()
 
-        # Copy full original image to static/detected_faces/{yyyy-mm-dd} directory
-        static_dest_dir = os.path.join("static", "detected_faces", current_date)
+        # Copy full original image to static/recognized_faces/{yyyy-mm-dd} directory
+        static_dest_dir = os.path.join("static", "recognized_faces", current_date)
         os.makedirs(static_dest_dir, exist_ok=True)
         full_image_filename = f"{name}_{current_time_str.replace(':', '-')}.jpg"
         full_image_dest_path = os.path.join(static_dest_dir, full_image_filename)
         shutil.copy2(source_img_path, full_image_dest_path)
 
-        self.last_saved_time[name] = current_time
+        # Update last_saved_time with extracted timestamp
+        self.last_saved_time[name] = extracted_datetime
 
-        logging.info(f"{name} marked present at {current_time_str} on {current_date}. Cropped face saved at {face_image_path}")
-        logging.info(f"Face copied to static/detected_faces/{current_date}: {full_image_dest_path}")
-    
+        logging.info(f"{name} marked at {current_time_str} on {current_date}.")
+
     def run(self):
         if not self.get_face_database():
             return
 
-        image_dir = "data/all_faces"
+        current_time = datetime.datetime.now()
+        current_date = current_time.strftime("%Y-%m-%d")
+        all_faces_dir = config.ALL_FACES_DIR
+        image_dir = os.path.join(all_faces_dir, current_date)
         logging.info(f"Processing images from directory: {image_dir}")
 
         image_files = []
@@ -134,7 +158,7 @@ class FaceRecognizer:
 
         for img_path in image_files:
             self.frame_cnt += 1
-            logging.info(f"Processing image: {img_path}")
+            #logging.info(f"Processing image: {img_path}")
             img_rd = cv2.imread(img_path)
 
             if img_rd is None:
@@ -143,7 +167,7 @@ class FaceRecognizer:
 
             faces = detector(img_rd, 0)
             self.current_frame_face_cnt = len(faces)
-            logging.info(f"Detected {self.current_frame_face_cnt} face(s) in {img_path}")
+            #logging.info(f"Detected {self.current_frame_face_cnt} face(s) in {img_path}")
 
             if self.current_frame_face_cnt == 0:
                 self.current_frame_face_name_list = []
@@ -173,7 +197,7 @@ class FaceRecognizer:
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
     recognizer = FaceRecognizer()
     recognizer.run()
 

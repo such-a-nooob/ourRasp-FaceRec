@@ -6,7 +6,7 @@ FOUND_DB_PATH = 'database/found.db'
 ALL_FACES_DIR = 'data/all_faces'
 
 KNOWN_FACES_DIR = 'data/known_faces'
-DETECTED_FACES_DIR = 'static/detected_faces'
+RECOGNIZED_FACES_DIR = 'static/recognized_faces'
 
 SHAPE_PREDICTOR = 'data/data_dlib/shape_predictor_68_face_landmarks.dat'
 FACEREC_MODEL = 'data/data_dlib/dlib_face_recognition_resnet_model_v1.dat'

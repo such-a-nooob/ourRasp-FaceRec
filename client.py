@@ -9,11 +9,11 @@ import os
 face_cascade = cv2.CascadeClassifier("/home/ourRasp/haarcascade_frontalface_default.xml")
 
 # Flask server URL
-SERVER_URL = "http://192.168.77.83:5000/upload"
+SERVER_URL = "http://192.168.68.83:5000/upload"
 
 # Image capture settings
-IMAGE_WIDTH = "1024"
-IMAGE_HEIGHT = "768"
+IMAGE_WIDTH = "640"
+IMAGE_HEIGHT = "480"
 IMAGE_PATH = "/home/ourRasp/last_capture.jpg"
 
 def capture_image():
@@ -53,7 +53,16 @@ def detect_and_send_faces():
 
     for i, (x, y, w, h) in enumerate(faces):
         face_img = image[y:y+h, x:x+w]
-        face_path = f"/home/ourRasp/face_{timestamp}_{i}.jpg"
+
+        # ? Resize face image to improve recognition by Dlib
+        try:
+            face_img = cv2.resize(face_img, (150, 150))
+        except Exception as e:
+            print(f"Error resizing face {i+1}: {e}")
+            continue
+
+        #face_path = f"/home/ourRasp/face_{timestamp}_{i}.jpg"
+        face_path = f"/home/ourRasp/face_{timestamp}.jpg"
         cv2.imwrite(face_path, face_img)
 
         # Send to server

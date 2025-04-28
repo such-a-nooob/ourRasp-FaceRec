@@ -26,7 +26,7 @@ def return_128d_features(path_img):
     img_rd = cv2.imread(path_img)
     faces = detector(img_rd, 1)
 
-    logging.info("%-40s %-20s", " Image with faces detected:", path_img)
+    #logging.info("%-40s %-20s", " Image with faces detected:", path_img)
 
     # For photos of faces saved, we need to make sure that we can detect faces from the cropped images
     if len(faces) != 0:
@@ -46,7 +46,7 @@ def return_features_mean_personX(path_face_personX):
     if photos_list:
         for i in range(len(photos_list)):
             #  return_128d_features()  128D  / Get 128D features for single image of personX
-            logging.info("%-40s %-20s", " / Reading image:", path_face_personX + "/" + photos_list[i])
+            #logging.info("%-40s %-20s", " / Reading image:", path_face_personX + "/" + photos_list[i])
             features_128d = return_128d_features(path_face_personX + "/" + photos_list[i])
             #  Jump if no face detected from image
             if features_128d == 0:
@@ -74,7 +74,7 @@ def main():
         writer = csv.writer(csvfile)
         for person in person_list:
             # Get the mean/average features of face/personX, it will be a list with a length of 128D
-            logging.info("%sperson%s", path_images_from_camera, person)
+            #logging.info(person)
             features_mean_personX = return_features_mean_personX(path_images_from_camera + person)
 
             if len(person.split('_', 1)) == 1:
@@ -86,7 +86,7 @@ def main():
             features_mean_personX = np.insert(features_mean_personX, 0, person_name, axis=0)
             # features_mean_personX will be 129D, person name + 128 features
             writer.writerow(features_mean_personX)
-            logging.info('\n')
+            #logging.info('\n')
         logging.info("Save all the features of faces registered into: data/features_all.csv")
 
 
